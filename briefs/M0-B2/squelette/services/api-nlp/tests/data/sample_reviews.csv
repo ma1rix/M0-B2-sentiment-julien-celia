@@ -1,0 +1,4 @@
+id,hotel,texte,note_client,sentiment_attendu
+1,Aubergine Bordeaux,"Accueil glacial à la réception, chambre froide et bruyante, nous ne reviendrons pas.",1,négatif
+2,Aubergine Bordeaux,"Personnel charmant, chambre impeccable, petit-déjeuner copieux. On reviendra avec plaisir.",5,positif
+3,Aubergine La Rochelle,"Séjour correct sans plus. La chambre fait son âge mais reste fonctionnelle pour une nuit.",3,neutre
