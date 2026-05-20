@@ -48,7 +48,7 @@ def map_stars_to_sentiment(sentiment_5_classes: list) -> str:
     else:
         sentiment_3_classes = "négatif"
     
-    logger.info("Prediction 3 classes: 1 sentiment: {}", sentiment_3_classes)
+    logger.debug("Prediction 3 classes: 1 sentiment: {}", sentiment_3_classes)
     
     return sentiment_3_classes
 
@@ -74,11 +74,11 @@ def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut
     
     timer2 = time.perf_counter()
 
-    logger.info("Requête /predict 5 classes: prediction={}", sentiment)
+    logger.debug("Requête /predict 5 classes: prediction={}", sentiment)
     score_5_classes = {d['label']: d['score'] for d in sentiment}
 
     argmax = max(score_5_classes, key=score_5_classes.get)
-    logger.info("Requête /predict label max:{}", argmax)
+    logger.debug("Requête /predict label max:{}", argmax)
 
     sentiment_3_classes = map_stars_to_sentiment(sentiment)
 

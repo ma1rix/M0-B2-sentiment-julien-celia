@@ -142,6 +142,6 @@ def predict(payload: ReviewIn) -> SentimentOut:
             detail=f"Texte trop long (> {MAX_TEXT_LENGTH} caractères).",
         )
 
-    logger.info("Requête /predict - texte reçu ({} chars): {} ", len(payload.texte), payload.texte)
     result = inference.predict_sentiment(pipeline=state["pipeline"], text=payload.texte, model_name=MODEL_NAME)
+    logger.info("Requête /predict -texte reçu:{}, sentiment:{}, latence:{} ", payload.texte[0:80], result.sentiment, result.latence_ms)
     return result
