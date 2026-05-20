@@ -142,51 +142,6 @@ def predict(payload: ReviewIn) -> SentimentOut:
             detail=f"Texte trop long (> {MAX_TEXT_LENGTH} caractères).",
         )
 
-    start_time = time.time()
-
-    analyzer = pipeline(
-        task='text-classification',
-        model="cmarkea/distilcamembert-base-sentiment",
-        tokenizer="cmarkea/distilcamembert-base-sentiment",
-        top_k=None
-    )
-    sentiment = analyzer(
-        payload.texte,
-        return_all_scores=True
-    )
-    
-    duration_ms = (time.time() - start_time) * 1000
-
-    logger.info("Requête /predict 5 classes: prediction={}", sentiment)
-
-    scores_3classe = [sentiment[0][0]["score"] + sentiment[0][1]["score"], sentiment[0][2]["score"], sentiment[0][3]["score"] + sentiment[0][4]["score"]]
-    index_max = scores_3classe.index(max(scores_3classe))
-    if index_max == 0:
-        sentiment_3classe = "positif"
-    elif index_max == 1:
-        sentiment_3classe = "neutre"
-    else:
-        sentiment_3classe = "négatif"
-    
-    logger.info("Prediction 3 classes: {}", sentiment_3classe)
-    logger.info("Duree: {} ms", duration_ms)
-
-    result = {d['label']: d['score'] for d in sentiment[0]}
-
-    return SentimentOut(
-        sentiment = sentiment_3classe,
-        scores_5_stars=result,
-        model_name=MODEL_NAME,
-        latence_ms=duration_ms
-    )
-
-
-    # TODO Tâche 3 — Appeler inference.predict_sentiment() et logger la requête.
-    # # Pour l'instant, on signale que ce n'est pas implémenté.
-    # raise HTTPException(
-    #     status_code=status.HTTP_501_NOT_IMPLEMENTED,
-    #     detail=(
-    #         "Endpoint /predict pas encore implémenté. Voir Tâche 3 du brief "
-    #         "et `app/inference.py`."
-    #     ),
-    # )
+    logger.info("Requête /predict - texte reçu ({} chars): {} ", len(payload.texte), payload.texte)
+    result = inference.predict_sentiment(pipeline=state["pipeline"], text=payload.texte, model_name=MODEL_NAME)
+    return result

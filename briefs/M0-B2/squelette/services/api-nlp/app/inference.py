@@ -18,20 +18,17 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from loguru import logger
+
 from app.schemas import Sentiment, SentimentOut
 
 
-def map_stars_to_sentiment(star_label: str) -> Sentiment:
+def map_stars_to_sentiment(sentiment_5_classes: list) -> str:
     """Mappe un label 5 étoiles ('1 star', ..., '5 stars') en 3 classes métier.
 
-    À compléter par l'apprenant. **Le choix du mapping est un arbitrage
-    métier**, pas une recette imposée : plusieurs découpages sont valides
-    (cf. mini-cours `02_HuggingFace_Transformers_essentiel.md`, section
-    "Justification du seuil de mapping").
-
-    Ton travail : proposer **ton** mapping et **le justifier** dans le
-    README perso async (coût d'un faux positif / faux négatif côté
-    métier Aubergine Hôtels).
+    Le sentiment positif est la somme de star 4 et 5
+    Le sentiment neutre est la star 3
+    Le sentiment négatif est la somme de star 1 et 2
 
     Args:
         star_label: label produit par le modèle (ex: '4 stars').
@@ -42,10 +39,18 @@ def map_stars_to_sentiment(star_label: str) -> Sentiment:
     Raises:
         ValueError: si `star_label` n'est pas dans le format attendu.
     """
-    # TODO Tâche 3 — implémenter le mapping de ton choix et documenter
-    # le raisonnement métier dans le README perso async.
-    raise NotImplementedError("Compléter `map_stars_to_sentiment` (Tâche 3).")
-
+    scores_3_classes = [sentiment_5_classes[0]['score'] + sentiment_5_classes[1]['score'], sentiment_5_classes[2]['score'], sentiment_5_classes[3]['score'] + sentiment_5_classes[4]['score']]
+    index_max = scores_3_classes.index(max(scores_3_classes))
+    if index_max == 0:
+        sentiment_3_classes = "positif"
+    elif index_max == 1:
+        sentiment_3_classes = "neutre"
+    else:
+        sentiment_3_classes = "négatif"
+    
+    logger.info("Prediction 3 classes: 1 sentiment: {}", sentiment_3_classes)
+    
+    return sentiment_3_classes
 
 def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut:
     """Inférence de sentiment sur un texte FR.
@@ -59,14 +64,27 @@ def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut
     Returns:
         SentimentOut avec sentiment 3 classes, scores 5★ bruts, et latence ms.
     """
-    # TODO Tâche 3 — compléter :
-    #
-    # 1. Mesurer le temps d'inférence (time.perf_counter() avant/après).
-    # 2. Appeler `pipeline(text, top_k=None)` pour récupérer toutes les
-    #    probabilités (5 entrées, une par étoile).
-    # 3. Construire `scores_5_stars: dict[str, float]` à partir du résultat.
-    # 4. Identifier le label argmax (la plus haute proba).
-    # 5. Appeler `map_stars_to_sentiment(label_argmax)` pour obtenir la
-    #    classe métier.
-    # 6. Renvoyer un `SentimentOut(...)`.
-    raise NotImplementedError("Compléter `predict_sentiment` (Tâche 3).")
+
+    timer1 = time.perf_counter()
+
+    sentiment = pipeline(
+        text,
+        top_k=None
+    )
+    
+    timer2 = time.perf_counter()
+
+    logger.info("Requête /predict 5 classes: prediction={}", sentiment)
+    score_5_classes = {d['label']: d['score'] for d in sentiment}
+
+    argmax = max(score_5_classes, key=score_5_classes.get)
+    logger.info("Requête /predict label max:{}", argmax)
+
+    sentiment_3_classes = map_stars_to_sentiment(sentiment)
+
+    return SentimentOut(
+        sentiment = sentiment_3_classes,
+        scores_5_stars=score_5_classes,
+        model_name=model_name,
+        latence_ms= timer2 - timer1
+    )
