@@ -19,6 +19,7 @@ import time
 from typing import Any
 
 from loguru import logger
+from numpy import mean
 
 from app.schemas import Sentiment, SentimentOut
 
@@ -39,11 +40,24 @@ def map_stars_to_sentiment(sentiment_5_classes: list) -> str:
     Raises:
         ValueError: si `star_label` n'est pas dans le format attendu.
     """
-    scores_3_classes = [sentiment_5_classes[0]['score'] + sentiment_5_classes[1]['score'], sentiment_5_classes[2]['score'], sentiment_5_classes[3]['score'] + sentiment_5_classes[4]['score']]
-    index_max = scores_3_classes.index(max(scores_3_classes))
-    if index_max == 0:
+    score_5_classes = {d['label']: d['score'] for d in sorted(sentiment_5_classes, key=lambda x: int(x['label'].split()[0]))}
+    logger.info("Scores 5 classes: {}", score_5_classes)
+
+    # scores_3_classes = [
+    #     score_5_classes['1 star'] + score_5_classes['2 stars'],
+    #     score_5_classes['3 stars'],
+    #     score_5_classes['4 stars'] + score_5_classes['5 stars']
+
+    # Récupérer le label avec le score max parmi les 5 classes, puis faire le mapping vers les 3 classes
+    max_label = max(score_5_classes, key=score_5_classes.get)
+    max_score = score_5_classes[max_label]
+    star_count = int(max_label.split()[0])
+
+    logger.info("Label max: {}, score max: {}, start_count:{}", max_label, max_score, star_count)
+ 
+    if star_count == 1 or star_count == 2:
         sentiment_3_classes = "négatif"
-    elif index_max == 1:
+    elif star_count == 3:
         sentiment_3_classes = "neutre"
     else:
         sentiment_3_classes = "positif"
@@ -74,11 +88,12 @@ def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut
     
     timer2 = time.perf_counter()
 
-    logger.info("Requête /predict 5 classes: prediction={}", sentiment)
-    score_5_classes = {d['label']: d['score'] for d in sentiment}
+    score_5_classes = {d['label']: d['score'] for d in sorted(sentiment, key=lambda x: int(x['label'].split()[0]))}
 
-    argmax = max(score_5_classes, key=score_5_classes.get)
-    logger.info("Requête /predict label max:{}", argmax)
+    # logger.info("Requête /predict 5 classes: prediction={}", score_5_classes)
+
+    # argmax = max(score_5_classes, key=score_5_classes.get)
+    # logger.info("Requête /predict label max:{}", argmax)
 
     sentiment_3_classes = map_stars_to_sentiment(sentiment)
 

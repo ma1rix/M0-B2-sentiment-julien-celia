@@ -43,7 +43,7 @@ def test_predict_endpoint_text_trop_long_returns_422() -> None:
 	assert response.status_code == 422
 
 
-@pytest.mark.parametrize("row_id", [2, 3, 1])
+@pytest.mark.parametrize("row_id", [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16, 17,18,19,20,21,22,23,24,25,26,27,28,29,30])
 def test_predict_endpoint_param_with_data(row_id: int) -> None:
     """Test paramétré : on lit `data/sample_reviews.csv` et on vérifie
     que l'API renvoie une structure valide pour trois exemples (pos/neu/neg).
